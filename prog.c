@@ -51,7 +51,7 @@ void analysis(char* buff){
 		if(pid == 0){ // Son
 			i=0, inFlag=0;
 			cnt = 0, space = 0;
-
+			arg[0]='\0';
 			while((ch = buff[i]) != '&'){
 				if(ch == ' ' && !inFlag){
 					word[cnt]='\0';
@@ -66,12 +66,14 @@ void analysis(char* buff){
 				}
 				i++;
 			}
-			if(cnt!=0){
+			if(arg[0] == '\0'){
 				word[cnt]='\0';
 				cnt=0;
 			}
-			arg[cnt]='\0';
-			if(cnt != 0){
+			else{
+				arg[cnt]='\0';
+			}
+			if(arg[0] != '\0'){
 				execlp(word, word, NULL);
 			}
 			else{
@@ -88,6 +90,7 @@ void analysis(char* buff){
 		}
 	}
 	else if(line){
+		arg[0]='\0';
 		i=0, inFlag=0, cnt=0, space=0;
 		while((ch = buff[i]) != '|'){
 			if(ch == ' ' && !inFlag){
@@ -103,52 +106,62 @@ void analysis(char* buff){
 			}
 			i++;
 		}
-		if(cnt!=0){
+		if(arg[0] == '\0'){
 			word[cnt]='\0';
 			cnt=0;
 		}
-		arg[cnt]='\0';
+		else{
+			arg[cnt]='\0';
+		}
 		pid = fork();
 		if(pid==0){
-			if(cnt!=0){
+			if(arg[0] != '\0'){
+				puts("First ARG");
 				execlp(word, word, arg, NULL);
 			}
 			else{
-				puts("First NO");
+				puts("First NO_ARG");
 				execlp(word, word, NULL);
 			}
 			exit(1);
 		}
 		else{
+			arg[0]='\0';
 			i++, inFlag=0, cnt=0, space=0;
 			while((ch = buff[i]) != '\n'){
-				if(ch == ' ' && !inFlag){
+				if(ch == ' ' && !inFlag && space){
 					word[cnt]='\0';
 					cnt=0;
 					space=1;
 				}
-				else if(!space){
-					word[cnt++]=buff[i];
+				else if(ch == ' ' && !space && !inFlag){
+					space=1;
 				}
 				else if(space){
+					word[cnt++]=buff[i];
+				}
+				else if(!space){
 					arg[cnt++]=buff[i];
 				}
 				i++;
 			}
 		}
-		if(cnt!=0){
+		if(arg[0] == '\0'){
 			word[cnt]='\0';
 			cnt=0;
 		}
-		arg[cnt]='\0';
+		else{
+			arg[cnt]='\0';
+		}
 		wait();
 		pid=fork();
 		if(pid==0){
-			if(cnt!=0){
+			if(arg[0] != '\0'){
+				puts("Second ARG");
 				execlp(word, word, arg, NULL);
 			}
 			else{
-				puts("Second NO");
+				puts("Second NO_ARG");
 				execlp(word, word, NULL);
 			}
 			exit(1);
@@ -159,7 +172,7 @@ void analysis(char* buff){
 		}
 	}
 	else{
-		i=0, inFlag=0, cnt=0, space=0;
+		i=0, inFlag=0, cnt=0, space=0, arg[0]='\0';
 		while((ch=buff[i]) != '\n'){
 			if(ch == ' ' && !inFlag){
 				word[cnt]='\0';
@@ -174,18 +187,16 @@ void analysis(char* buff){
 			}
 			i++;
 		}
-		if(cnt != 0){
+		if(arg[0] == '\0'){
 			word[cnt]='\0';
 			cnt = 0;
 		}
-		if(cnt!=0){
-			word[cnt]='\0';
-			cnt=0;
+		else{
+			arg[cnt]='\0';
 		}
-		arg[cnt]='\0';
 		pid=fork();
-		if(pid==0){
-			if(cnt!=0){
+		if(pid == 0){
+			if(arg[0] != '\0'){
 				puts("YES ARG");
 				execlp(word, word, arg, NULL);
 			}
@@ -196,6 +207,7 @@ void analysis(char* buff){
 			exit(1);
 		}
 		else{
+			wait();
 			return;
 		}
 	}
@@ -210,6 +222,7 @@ void cons_read(char* history){
 	int flag = 1, start = 0;
 	char buffer[100+1], ch;
 	int cnt = 0;
+	printf(">> ");
 	while((ch = getchar()) != EOF){
 		if(ch == ' '){
 			if(start && flag){
@@ -226,6 +239,8 @@ void cons_read(char* history){
 			}
 			analysis(buffer);
 			write(fd, buffer, cnt);
+			wait();
+			printf(">> ");
 			cnt=0;
 			flag=1;
 			start=0;;
